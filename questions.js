@@ -29,15 +29,21 @@
 // 3. validPlate - Check if the input string is a valid license plate with the format: Three uppercase letters followed by three digits.
 
 function containDigit(str) {
-  // Write your implementation
+  const pattern = /\d/
+  // Can also use this:
+  //const pattern = /[0-9]/;
+  
+  return pattern.test(str);
 }
 
 function containCapital(str) {
-  // Write your implementation
+  const pattern = /[A-Z]/;
+  return pattern.test(str);
 }
 
 function validPlate(str) {
-  // Write your implementation
+  const pattern = /^[A-Z]{3}[0-9]{3}$/;
+  return pattern.test(str);
 }
 
 // Question 2 Using Regular Expression Function `.match()`
@@ -47,14 +53,35 @@ function validPlate(str) {
 // [note]: All these questions are case-insensitive, and the returned words should be
 // in lowercase. For instance, both "My" and "my" should return "my"
 function findWordsWithVowels(str) {
-  // Write your implementation
+  // Breakdown of Regex pattern:
+  // \b --> matches start of the word
+  // \w* --> matches zero or more word characters (letters/digits)
+  // [aeiou] --> matches at least one vowel
+  // \w* --> matches the rest of the word characters
+  // \b --> matches the end of a word
+
+  const pattern = /\b\w*[aeiou]\w*\b/gi;
+
+  // || [] means if no matches found, return null empty array.
+  return str.toLowerCase().match(pattern) || [];
 }
+
 function findWordsEndingWithDigit(str) {
-  // Write your implementation
+  // Breakdown of Regex pattern
+  // \b --> is the start word boundary. It ensures the engine starts looking at the very beginning of a word.
+  // \w* --> Matches zero or more "word characters" (letters, digits, or underscores). Allows for words of any length (like "abc", "12" or a sole digit.)
+  // \d --> this is the must have part. It forces the match to find a digit because it is placed right before the closing boundary.
+  // \b --> another word boundary. This ensures that whatever digit was found is actually the end of the word.
+
+  const pattern = /\b\w*\d\b/gi;
+  return str.toLowerCase().match(pattern) || [];
 }
 
 function findWordsWithPattern(str) {
-  // Write your implementation
+  const pattern = /\b[bkdl]\w*e\b/gi;
+
+  return str.toLowerCase().match(pattern) || [];
+
 }
 
 // Question 3: Format an array of product strings into an array of objects with 'id' and 'title' properties.
@@ -68,7 +95,28 @@ function findWordsWithPattern(str) {
 //    { id: 'womensCloth', title: "Women's Cloth" }
 // ]
 function formatProductNames(products) {
-  // Write your implementation
+  return products.map(item => {
+
+    // Step 1: Create the ID where it is camelCase and lowercase. 
+    // First, we will remove special characters using Regex.
+    // Second, we will handle the camelCase by splitting and joining.
+
+    const id = item
+    .replace(/[^a-zA-Z0-9 ]/g, "")
+    .split(' ')
+    .map((word, index) => {
+      return index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('');
+
+    // Create the title capitalised
+    const title = item
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+    return { id: id, title: title };
+  });
 }
 
 // Question 4: Write an asynchronous function `getCategories` that retrieves a list of categories from the Fake Store API.
@@ -76,8 +124,24 @@ function formatProductNames(products) {
 // This function should use async/await for handling asynchronous operations.
 // Note: you can find the api documents at: https://fakestoreapi.com/docs
 async function getCategories() {
-  // Write your implementation
+  const url = 'https://fakestoreapi.com/products/categories';
+  
+  try {
+    const response = await fetch(url);
+    
+    // Check if the response is okay (status 200-299)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data; // This ensures the function returns the array
+  } catch (e) {
+    console.error("Error fetching categories:", e.message);
+    return []; // Return an empty array or handle the error as needed
+  }
 }
+
 
 // Question 5: Write an asynchronous function `getGoodProducts` that retrieves products from a specified category with a rating equal to or higher than a given minimum.
 // This function should take two parameters: `category` (a string) and `minRate` (a number).
@@ -86,7 +150,33 @@ async function getCategories() {
 // You should use high order array function map and filter.
 // Note: you can find the api documents at: https://fakestoreapi.com/docs
 async function getGoodProducts(category, minRate) {
-  // Write your implementation
+  const url = 'https://fakestoreapi.com/products/';
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok)
+    {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+
+    // Filter category and rating.
+    const filteredProducts = data.filter(item => item.category === category && item.rating.rate >= minRate);
+
+    // Map to the specific object structure requested in the question.
+    const result = filteredProducts.map(item => ({
+      id: item.id,
+      rate: item.rating.rate,
+      title: item.title,
+      price: item.price
+    }));
+
+    return result;
+
+  } catch (e) {
+    console.error("Error fetching items:", e.message);
+    return [];
+  }
 }
 
 module.exports = {
